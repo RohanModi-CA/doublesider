@@ -17,6 +17,10 @@ from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, QDropEvent, QPainter, 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+with open("resources/printer_name.txt", "r") as pn_txt:
+    printer_name = pn_txt.read().strip()
+
+
 class DoubleSider(QWidget):
     def __init__(self):
         super().__init__()
@@ -138,7 +142,7 @@ class Printer1(QWidget):
         self.first_button.clicked.connect(self.first_button_go)
         self.printer2 = Printer2()
 
-        if not ds_code.check_printer("HL-L2320D-series"):
+        if not ds_code.check_printer(printer_name):
             self.warn_no_printer()
             pass
 
@@ -156,7 +160,7 @@ class Printer1(QWidget):
         self.first_button.setEnabled(False)
         self.update()
         ds_code.split_pdf("resources/my_pdf.pdf")
-        ds_code.send_print("HL-L2320D-series","first")
+        ds_code.send_print(printer_name,"first")
 
 
         import instructions_overlay # this is really hacky moving the order of import to avoid some strange conflict.
@@ -198,7 +202,7 @@ class Printer2(QWidget):
         self.done.clicked.connect(self.done_go)
         self.olivia = QLabel()
 
-        if not ds_code.check_printer("HL-L2320D-series"):
+        if not ds_code.check_printer(printer_name):
             #self.warn_no_printer()
             pass
 
@@ -218,7 +222,7 @@ class Printer2(QWidget):
 
     def done_go(self):
         self.done.setEnabled(False)
-        ds_code.send_print("HL-L2320D-series","second")
+        ds_code.send_print(printer_name,"second")
         self.close()
         app.quit()
         sys.exit()
