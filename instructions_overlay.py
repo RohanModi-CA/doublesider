@@ -8,6 +8,8 @@ import base64
 import os
 from io import BytesIO
 
+base_dir = os.path.dirname(__file__)
+
 def make_photo():
     src_pts = np.array([[0, 0], [611, 0], [611, 664], [0, 664]], dtype=np.float32)
     # dst_pts = np.array([[1455, 4547], [2777, 5388], [3388, 4178], [2257, 3698]], dtype=np.float32)
@@ -19,10 +21,10 @@ def make_photo():
                         ],
                       dtype=np.float32)
     # Load the images
-    foreground = Image.open("resources/first_page.jpg")
+    foreground = Image.open(os.path.join(base_dir, "resources/first_page.jpg"))
     foreground = foreground.convert("RGBA")
     foreground.putalpha(255)
-    background = Image.open("resources/empty_printer.png")
+    background = Image.open(os.path.join(base_dir, "resources/empty_printer.png"))
 
     # Calculate the perspective transform matrix
     M = cv2.getPerspectiveTransform(src_pts, dst_pts)
@@ -35,23 +37,24 @@ def make_photo():
     # Combine the images using alpha composite
     background.paste(warped_foreground, (0, 0), warped_foreground)
     
-    background.save("resources/new_img.png")
+    background.save(os.path.join(base_dir, "resources/new_img.png"))
     
 
-def first_page_jpg():
-    fp_pdf = fitz.open("resources/my_pdf.pdf")
-    page = fp_pdf.load_page(0)  # number of page
+def first_page_jpg(number):
+    number -= 1
+    fp_pdf = fitz.open(os.path.join(base_dir,"resources/my_pdf.pdf"))
+    page = fp_pdf.load_page(number)  # second page
     pix = page.get_pixmap()
-    output = "resources/first_page-t.jpg"
+    output = os.path.join(base_dir, "resources/first_page-t.jpg")
     pix.save(output)
     fp_pdf.close()
 
-    img = Image.open('resources/first_page-t.jpg')
+    img = Image.open(os.path.join(base_dir, 'resources/first_page-t.jpg'))
     resized_img = img.resize((596, 842))
-    resized_img.save('resources/first_page.jpg')
+    resized_img.save(os.path.join(base_dir, 'resources/first_page.jpg'))
     img.close()
 
-    os.remove('resources/first_page-t.jpg')
+    os.remove(os.path.join(base_dir, 'resources/first_page-t.jpg'))
 
 
 def html():

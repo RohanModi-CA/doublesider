@@ -83,30 +83,28 @@ class DoubleSider(QWidget):
             }
         """)
 
+
     def dropEvent(self, event: QDropEvent) -> None:
         event.acceptProposedAction()
         urls = event.mimeData().urls()
         file_paths = [url.toLocalFile() for url in urls]
 
         # Update label with dropped file information
-        
-
         if len(file_paths) == 1:
-
             if file_paths[0][-3:] == "pdf":
-
                 self.label.setText(f"Dropped: {file_paths[0]}")
                 shutil.copy(file_paths[0], os.path.join(base_dir, "resources/my_pdf.pdf"))
+                self.printer.total_pages = ds_code.count_pages(file_paths[0])
+                self.printer.total_label.setText(f"There are {self.printer.total_pages} total pages.")
+                self.printer.currently_printing.setText(f"You have selected {self.printer.total_pages} pages.")
+                self.printer.page_range.setText(f"1-{self.printer.total_pages}")
 
-                self.printer.show()
-                page_count_first_print = math.ceil(ds_code.count_pages(file_paths[0]) / 2)
+                page_count_first_print = math.ceil(self.printer.total_pages / 2)
                 self.printer.first_button.setText(f"Start Printing the First {page_count_first_print} Pages ")
+                self.printer.show()
                 self.close()
             else:
                 self.label.setText("PDFs only please.")
-
-            
-    
         else:
             self.label.setText(f"One File at a Time.")
 
@@ -119,6 +117,8 @@ class DoubleSider(QWidget):
                 min-height: 100px; 
             }
         """)
+
+
 
     def open_file_dialog(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -247,11 +247,11 @@ class Printer1(QWidget):
         self.first_button.setEnabled(False)
         self.update()
         ds_code.split_pdf(os.path.join(base_dir, os.path.join(base_dir,"resources/my_pdf.pdf")), sorted(self.range_creator())) # add list processer
-        ds_code.send_print(printer_name,"first")
+        ds_code.send_print(printer_name,"second")
 
 
         import instructions_overlay # this is really hacky moving the order of import to avoid some strange conflict.
-        instructions_overlay.first_page_jpg()
+        instructions_overlay.first_page_jpg(sorted(self.range_creator())[0])
         instructions_overlay.make_photo()
 
         self.vbox.addWidget(self.done_button)
@@ -259,7 +259,7 @@ class Printer1(QWidget):
     def done_button_go(self):
         #self.printer2.olivia.setPixmap(self.printer2.olivia_pixmap)
         import instructions_overlay
-        self.printer2.web_view.setHtml(instructions_overlay.html(), baseUrl=QUrl.fromLocalFile(os.getcwd()+os.path.sep))
+        self.printer2.web_view.setHtml(instructions_overlay.html(), baseUrl=QUrl.fromLocalFile(base_dir + "/"))
 
         self.printer2.show()
         self.close()
@@ -289,7 +289,6 @@ class Printer2(QWidget):
         self.olivia = QLabel()
 
         if not ds_code.check_printer(printer_name):
-            #self.warn_no_printer()
             pass
 
 
@@ -308,7 +307,7 @@ class Printer2(QWidget):
 
     def done_go(self):
         self.done.setEnabled(False)
-        ds_code.send_print(printer_name,"second")
+        ds_code.send_print(printer_name,"first")
         self.close()
         app.quit()
         sys.exit()
@@ -327,6 +326,9 @@ def file_cleanup():
         os.remove(os.path.join(base_dir, "resources/first_print.pdf"))
     if os.path.exists(os.path.join(base_dir, "resources/second_print.pdf")):
         os.remove(os.path.join(base_dir, "resources/second_print.pdf"))
+    if os.path.exists(os.path.join(base_dir, "resources/temp-pdf.pdf")):
+        os.remove(os.path.join(base_dir, "resources/temp-pdf.pdf"))
+
 
 
 if __name__ == "__main__":
