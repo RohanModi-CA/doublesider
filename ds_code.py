@@ -4,16 +4,8 @@ from PyPDF2 import PdfReader, PdfWriter
 import subprocess
 import os
 
-"""
-printer_name = "HL-L2320D-series"
 
-fp_pdf = fitz.open("resources/my_pdf.pdf")
-page = fp_pdf.load_page(0)  # number of page
-pix = page.get_pixmap()
-output = "resources/first_page.jpg"
-pix.save(output)
-fp_pdf.close()
-"""
+base_dir = os.path.dirname(__file__)
 
 def count_pages(pdf_path):
     with open(pdf_path, "rb") as pdf_file:
@@ -30,11 +22,11 @@ def split_pdf(pdf_path, page_range):
             page_to_add = range_reader.pages[page - 1]
             range_writer.add_page(page_to_add)
 
-        with open("resources/temp-pdf.pdf", "wb") as temp_pdf:
+        with open(os.path.join(base_dir, "resources/temp-pdf.pdf"), "wb") as temp_pdf:
             range_writer.write(temp_pdf)
 
 
-    with open("resources/temp-pdf.pdf", "rb") as pdf_file:
+    with open(os.path.join(base_dir, "resources/temp-pdf.pdf"), "rb") as pdf_file:
         reader = PdfReader(pdf_file)
 
         page_list = range(len(reader.pages)) # creates a 0 index based list of pages
@@ -53,15 +45,15 @@ def split_pdf(pdf_path, page_range):
                 page = reader.pages[page_num]
                 second_writer.add_page(page)
         if len(reader.pages) % 2 == 1:
-            with open("resources/dot.pdf", "rb") as dot_pdf:
+            with open(os.path.join(base_dir, "resources/dot.pdf"), "rb") as dot_pdf:
                 dot_reader = PdfReader(dot_pdf)
                 dot_page = dot_reader.pages[0]
                 second_writer.add_page(dot_page)
 
         # Save the new PDF file
-        with open("resources/first_print.pdf", "wb") as first_pdf:
+        with open(os.path.join(base_dir, "resources/first_print.pdf"), "wb") as first_pdf:
             first_writer.write(first_pdf)
-        with open("resources/second_print.pdf", "wb") as second_pdf:
+        with open(os.path.join(base_dir, "resources/second_print.pdf"), "wb") as second_pdf:
             second_writer.write(second_pdf)
 
 
@@ -83,7 +75,7 @@ def check_printer(printer_name):
 def send_print(printer_name, first_or_second):
     if first_or_second != "first" and first_or_second != "second":
         raise ValueError("must be either 'first' or 'second'")
-    first_print_process = os.system(f"lpr -P {printer_name} resources/{first_or_second}_print.pdf")
+    first_print_process = os.system(f"lpr -P {printer_name} {base_dir}/resources/{first_or_second}_print.pdf")
 
 
 

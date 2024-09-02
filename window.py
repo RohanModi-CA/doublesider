@@ -17,7 +17,10 @@ from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, QDropEvent, QPainter, 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-with open("resources/printer_name.txt", "r") as pn_txt:
+base_dir = os.path.dirname(__file__)
+
+
+with open(os.path.join(base_dir,"resources/printer_name.txt"), "r") as pn_txt:
     printer_name = pn_txt.read().strip()
 
 
@@ -93,7 +96,7 @@ class DoubleSider(QWidget):
             if file_paths[0][-3:] == "pdf":
 
                 self.label.setText(f"Dropped: {file_paths[0]}")
-                shutil.copy(file_paths[0], "resources/my_pdf.pdf")
+                shutil.copy(file_paths[0], os.path.join(base_dir, "resources/my_pdf.pdf"))
 
                 self.printer.show()
                 page_count_first_print = math.ceil(ds_code.count_pages(file_paths[0]) / 2)
@@ -122,7 +125,7 @@ class DoubleSider(QWidget):
             self, "Open File", "", "PDF Files (*.pdf)"
         )
         if file_name:
-            shutil.copy(file_name, "resources/my_pdf.pdf")
+            shutil.copy(file_name, os.path.join(base_dir, "resources/my_pdf.pdf"))
             self.label.setText(f"Selected: {file_name}")
 
             self.printer.show()
@@ -243,7 +246,7 @@ class Printer1(QWidget):
     def first_button_go(self):
         self.first_button.setEnabled(False)
         self.update()
-        ds_code.split_pdf("resources/my_pdf.pdf", sorted(self.range_creator())) # add list processer
+        ds_code.split_pdf(os.path.join(base_dir, os.path.join(base_dir,"resources/my_pdf.pdf")), sorted(self.range_creator())) # add list processer
         ds_code.send_print(printer_name,"first")
 
 
@@ -254,7 +257,6 @@ class Printer1(QWidget):
         self.vbox.addWidget(self.done_button)
 
     def done_button_go(self):
-        #self.printer2.olivia_pixmap = QPixmap('resources/new_img.png').scaledToHeight(800)
         #self.printer2.olivia.setPixmap(self.printer2.olivia_pixmap)
         import instructions_overlay
         self.printer2.web_view.setHtml(instructions_overlay.html(), baseUrl=QUrl.fromLocalFile(os.getcwd()+os.path.sep))
@@ -315,16 +317,16 @@ class Printer2(QWidget):
 
 
 def file_cleanup():
-    if os.path.exists("resources/first_page.jpg"):
-        os.remove("resources/first_page.jpg")
-    if os.path.exists("resources/my_pdf.pdf"):
-        os.remove("resources/my_pdf.pdf")
-    if os.path.exists("resources/new_img.png"):
-        os.remove("resources/new_img.png")
-    if os.path.exists("resources/first_print.pdf"):
-        os.remove("resources/first_print.pdf")
-    if os.path.exists("resources/second_print.pdf"):
-        os.remove("resources/second_print.pdf")
+    if os.path.exists(os.path.join(base_dir, "resources/first_page.jpg")):
+        os.remove(os.path.join(base_dir, "resources/first_page.jpg"))
+    if os.path.exists(os.path.join(base_dir, "resources/my_pdf.pdf")):
+        os.remove(os.path.join(base_dir, "resources/my_pdf.pdf"))
+    if os.path.exists(os.path.join(base_dir, "resources/new_img.png")):
+        os.remove(os.path.join(base_dir, "resources/new_img.png"))
+    if os.path.exists(os.path.join(base_dir, "resources/first_print.pdf")):
+        os.remove(os.path.join(base_dir, "resources/first_print.pdf"))
+    if os.path.exists(os.path.join(base_dir, "resources/second_print.pdf")):
+        os.remove(os.path.join(base_dir, "resources/second_print.pdf"))
 
 
 if __name__ == "__main__":
