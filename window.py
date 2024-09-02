@@ -9,7 +9,7 @@ import warnings
 import math
 
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QHBoxLayout, QVBoxLayout,
-                             QPushButton, QFileDialog, QFrame, QMessageBox)
+                             QPushButton, QFileDialog, QFrame, QMessageBox, QLineEdit)
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import Qt, QEvent, QUrl
 from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, QDropEvent, QPainter, QPixmap, QColor, QBrush, QPainter, QCursor
@@ -126,7 +126,13 @@ class DoubleSider(QWidget):
             self.label.setText(f"Selected: {file_name}")
 
             self.printer.show()
-            page_count_first_print = math.ceil(ds_code.count_pages(file_name) / 2)
+            
+            self.printer.total_pages = ds_code.count_pages(file_name)
+            self.printer.total_label.setText(f"There are {self.printer.total_pages} total pages.")
+            self.printer.currently_printing.setText(f"You have selected {self.printer.total_pages} pages.")
+            self.printer.page_range.setText(f"1-{self.printer.total_pages}")
+
+            page_count_first_print = math.ceil(self.printer.total_pages / 2)
             self.printer.first_button.setText(f"Start Printing the First {page_count_first_print} Pages ")
             self.close()
 
@@ -137,6 +143,14 @@ class Printer1(QWidget):
         super().__init__()
         
         self.setWindowTitle("DoubleSider")
+
+        self.total_label = QLabel()
+        self.currently_printing = QLabel()
+        self.range_label = QLabel("Define the pages you'd want printed. \nFor example: 1-12, 14, 24-25")
+    
+        self.page_range = QLineEdit()
+        self.page_range.textChanged.connect(self.range_validator)
+
 
         self.first_button = QPushButton("Start Printing")
         self.first_button.clicked.connect(self.first_button_go)
@@ -152,14 +166,84 @@ class Printer1(QWidget):
 
         self.hbox = QHBoxLayout()
         self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.total_label)
+        self.vbox.addWidget(self.currently_printing)
+        self.vbox.addWidget(self.range_label)
+        self.vbox.addWidget(self.page_range)
         self.hbox.addWidget(self.first_button)
         self.vbox.addLayout(self.hbox)
         self.setLayout(self.vbox)
 
+    def range_validator(self, text):
+        try:
+            self.first_button.setEnabled(False)
+            list_of_pages = []
+            page_ranges_list = text.split(",")
+            for page_range in page_ranges_list:
+                page_range = page_range.replace(",","").strip()
+
+                start_and_end = page_range.split("-")
+                if len(start_and_end) >= 3:
+                    raise ValueError("bad input0")
+                if len(start_and_end) == 1:
+                    if int(start_and_end[0]) > self.total_pages:
+                        raise ValueError("out of range")
+                    if not(int(start_and_end[0]) in list_of_pages):
+                        list_of_pages.append(int(start_and_end[0]))
+                elif len(start_and_end) == 2:
+                    if int(start_and_end[0]) > int(start_and_end[1]):
+                        raise ValueError("bad input 1")
+                    pages_in_this_range = range(int(start_and_end[0]), int(start_and_end[1])+1) 
+                    for page in pages_in_this_range:
+                        if int(page) > self.total_pages:
+                            raise ValueError("out of range")
+                        if not(page in list_of_pages):
+                            list_of_pages.append(int(page))
+
+            list_of_pages = sorted(list_of_pages)
+            self.first_button.setText(f"Start Printing the First {math.ceil(len(list_of_pages) / 2)} Pages")
+            self.currently_printing.setText(f"You have selected {len(list_of_pages)} pages.")
+            self.first_button.setEnabled(True)
+            return list_of_pages
+        except ValueError:
+            pass
+      
+
+    def range_creator(self):
+        list_of_pages = []
+        try:
+            text = self.page_range.text()
+            page_ranges_list = text.split(",")
+            for page_range in page_ranges_list:
+                page_range = page_range.replace(",","").strip()
+
+                start_and_end = page_range.split("-")
+                if len(start_and_end) >= 3:
+                    raise ValueError("bad input0")
+                if len(start_and_end) == 1:
+                    if int(start_and_end[0]) > self.total_pages:
+                        raise ValueError("out of range")
+                    if not(int(start_and_end[0]) in list_of_pages):
+                        list_of_pages.append(int(start_and_end[0]))
+                elif len(start_and_end) == 2:
+                    if int(start_and_end[0]) > int(start_and_end[1]):
+                        raise ValueError("bad input 1")
+                    pages_in_this_range = range(int(start_and_end[0]), int(start_and_end[1])+1) 
+                    for page in pages_in_this_range:
+                        if int(page) > self.total_pages:
+                            raise ValueError("out of range")
+                        if not(page in list_of_pages):
+                            list_of_pages.append(int(page))
+        except ValueError:
+            pass
+
+        return list_of_pages
+
+
     def first_button_go(self):
         self.first_button.setEnabled(False)
         self.update()
-        ds_code.split_pdf("resources/my_pdf.pdf")
+        ds_code.split_pdf("resources/my_pdf.pdf", sorted(self.range_creator())) # add list processer
         ds_code.send_print(printer_name,"first")
 
 

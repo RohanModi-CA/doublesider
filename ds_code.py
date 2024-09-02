@@ -21,8 +21,20 @@ def count_pages(pdf_path):
         page_count = len(reader.pages)
     return page_count
 
-def split_pdf(pdf_path):
+def split_pdf(pdf_path, page_range):
+
     with open(pdf_path, "rb") as pdf_file:
+        range_reader = PdfReader(pdf_file)
+        range_writer = PdfWriter()
+        for page in page_range:
+            page_to_add = range_reader.pages[page - 1]
+            range_writer.add_page(page_to_add)
+
+        with open("resources/temp-pdf.pdf", "wb") as temp_pdf:
+            range_writer.write(temp_pdf)
+
+
+    with open("resources/temp-pdf.pdf", "rb") as pdf_file:
         reader = PdfReader(pdf_file)
 
         page_list = range(len(reader.pages)) # creates a 0 index based list of pages
