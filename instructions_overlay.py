@@ -41,7 +41,6 @@ def make_photo():
     
 
 def first_page_jpg(number):
-    number -= 1
     fp_pdf = fitz.open(os.path.join(base_dir,"resources/my_pdf.pdf"))
     page = fp_pdf.load_page(number)  # second page
     pix = page.get_pixmap()
